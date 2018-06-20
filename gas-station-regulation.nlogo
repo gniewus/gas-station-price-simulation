@@ -13,12 +13,14 @@ gas-stations-own [
 ]
 
 drivers-own [
+
   capacity ;; Maximale kapazität: 40-80 Liter
   leftGasoline ;; Wie viel noch im tank übrig ist
   picked-station ;; The gas station that the user picked from all of the posibilitis within the kilometer range he can reach
   price-sensivity ;; [0-1]
   distance-sensitivity;; [0-1]
   ;; Here eventually Benzinverbrauch pro Tick
+
 ]
 
 globals [
@@ -36,6 +38,7 @@ to setup
 
   ask gas-station 0 [
     set isMarketLeader? true
+    set size 1.5
   ]
 
   create-drivers nr-of-drivers [
@@ -47,7 +50,6 @@ to setup
   ]
 
   set rawOilPricePerLiter 50
-
   reset-ticks
 end
 
@@ -112,6 +114,7 @@ end
 to decide-gas-station
   show "decide-gas"
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -183,7 +186,11 @@ nr-of-drivers
 nr-of-drivers
 0
 100
+<<<<<<< HEAD
 1.0
+=======
+5.0
+>>>>>>> 6504baf37e5d183e0eabf9cbdb2663568982ce09
 1
 1
 NIL
@@ -531,7 +538,11 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
+<<<<<<< HEAD
 NetLogo 6.0.2
+=======
+NetLogo 6.0.3
+>>>>>>> 6504baf37e5d183e0eabf9cbdb2663568982ce09
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
