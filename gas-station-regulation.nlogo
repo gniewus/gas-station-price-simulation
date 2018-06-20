@@ -32,6 +32,7 @@ to setup
 
   ask gas-station 0 [
     set isMarketLeader? true
+    set size 1.5
   ]
 
   create-drivers nr-of-drivers [
