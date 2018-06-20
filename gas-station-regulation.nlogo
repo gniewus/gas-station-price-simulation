@@ -13,8 +13,12 @@ gas-stations-own [
 ]
 
 drivers-own [
-  capacity
-  leftGasoline
+  capacity ;; Maximale kapazität: 40-80 Liter
+  leftGasoline ;; Wie viel noch im tank übrig ist
+  picked-station ;; The gas station that the user picked from all of the posibilitis within the kilometer range he can reach
+  price-sensivity ;; [0-1]
+  distance-sensitivity;; [0-1]
+  ;; Here eventually Benzinverbrauch pro Tick
 ]
 
 globals [
@@ -35,8 +39,14 @@ to setup
   ]
 
   create-drivers nr-of-drivers [
+
+    set capacity ((random 40) + 40)
+    show (word "capacity :" capacity)
+    set leftGasoline capacity
     setxy random-xcor random-ycor
   ]
+
+  set rawOilPricePerLiter 50
 
   reset-ticks
 end
@@ -47,9 +57,60 @@ to go
 end
 
 to move-drivers
+
+
   ask drivers [
+
+    ifelse compute-left-gas-ratio > 20
+    [
+
+      show compute-left-gas-ratio
+
+    ][
+
+        go-to-station
+
+
+    ]
+    set leftGasoline leftGasoline - 1
     fd 1
   ]
+end
+
+
+to-report compute-left-gasoline
+
+  show leftGasoline
+
+
+end
+
+
+to-report compute-left-gas-ratio
+    let ratio 0
+    set ratio  leftGasoline / capacity
+    set ratio ratio * 100
+    report ratio
+end
+
+to go-to-station
+
+  show "go-to-station"
+  face
+end
+
+
+to search-gas-station
+  let in-range []
+
+end
+
+to compute-likeliness
+  ;;set result distance-sensitivity * (/ 20)   price-sensivity
+end
+
+to decide-gas-station
+  show "decide-gas"
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -122,7 +183,7 @@ nr-of-drivers
 nr-of-drivers
 0
 100
-5.0
+1.0
 1
 1
 NIL
@@ -470,7 +531,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.3
+NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
