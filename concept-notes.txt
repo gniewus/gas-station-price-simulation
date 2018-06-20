@@ -1,0 +1,75 @@
+globals
+-------
+int 		minRawOilPrice (can be set through interface)
+int 		maxRawOilPrice (can be set through interface)
+double	rawOilPricePerLiter
+
+
+gas station
+-----------
+int			id // stored by default
+boolean	isMarketLeader?
+double	priceAdjustment (in percent) (start adjustment of market leader can be set through interface)
+double	pricePerLiter
+double  dailyRevenue
+double	totalRevenue
+int[]		hourlyCustomerCounter
+(int 		capacity) // we ignore this in our simulation
+int 		posX // stored by default
+int     posY // stored by default
+
+
+drivers
+-------
+int			id // stored by default
+int			capacity // 40-80 liter
+double	leftGasoline // if below 20% of capacity -> search gas station 
+int 		posX // stored by default
+int     posY // stored by default
+double	direction // stored by default
+
+
+setup:
+- set minRawOilPrice and maxRawOilPrice
+- set start price adjustment of market leader
+- set capacities of drivers randomly
+
+general notes:
+- drivers drive in static speed in a random direction
+- each tick represents an hour
+- each distance unit represents 10 km
+- every driver uses 1l gasoline per 10 km (each step)
+- if a drivers leftGasoline <= 0.2*capacity then drive to the cheapest gas station in range
+
+daily:
+- rawOilPricePerLiter is set randomly in the interval of minRawOilPrice and maxRawOilPrice
+- market leader gas station sets it pricePerLiter by rawOilPrice*priceAdjustment
+- market follower gas stations set there pricePerLiter by marketLeaderGasStation.pricePerLiter*priceAdjustment
+
+hourly:
+- gas stations change there price according to demand, prices of close gas stations and the raw oil price
+
+
+How to choose the gas station for refuel?
+	which gas stations can I reach?
+	stations[]
+
+	station1	10=0,5   1,20/l  result: 1,7
+	station2	15=0,75  1,30/l  result: 2,05
+	station3  5=0,25	 1,40/l  result: 1,65
+	station4  4=0,2    1,45/l  result: 1,65
+
+
+
+How to adjust the price each hour?
+
+	raw oil price is minimum
+
+	marge * #customer  = 
+
+		rawoil 1 €
+		s1   0,25€ * 6 = 1,5€
+		s2   0,30€ * 4 = 1,2
+		s3   0,50€ * 2 = 1,0
+		s4   0,40€ * 9 = 3,6
+		s5
