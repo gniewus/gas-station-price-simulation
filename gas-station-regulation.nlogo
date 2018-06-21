@@ -34,11 +34,12 @@ to setup
   create-gas-stations 5 [
     setxy random-xcor random-ycor
     set isMarketLeader? false
+    set size 3
   ]
 
   ask gas-station 0 [
     set isMarketLeader? true
-    set size 1.5
+    set size 4
   ]
 
   create-drivers nr-of-drivers [
@@ -47,6 +48,7 @@ to setup
     show (word "capacity :" capacity)
     set leftGasoline capacity
     setxy random-xcor random-ycor
+    set size 2
   ]
 
   set rawOilPricePerLiter 50
@@ -59,32 +61,29 @@ to go
 end
 
 to move-drivers
+  repeat 60 [
+    ask drivers [
 
+      ifelse compute-left-gas-ratio > 20
+      [
 
-  ask drivers [
+        ; show compute-left-gas-ratio
 
-    ifelse compute-left-gas-ratio > 20
-    [
-
-      show compute-left-gas-ratio
-
-    ][
+      ][
 
         go-to-station
 
 
+      ]
+      set leftGasoline leftGasoline - 0.25
+      fd 1
     ]
-    set leftGasoline leftGasoline - 1
-    fd 1
   ]
 end
 
 
 to-report compute-left-gasoline
-
   show leftGasoline
-
-
 end
 
 
@@ -97,8 +96,7 @@ end
 
 to go-to-station
 
-  show "go-to-station"
-  face
+  ;show "go-to-station"
 end
 
 
@@ -114,16 +112,15 @@ end
 to decide-gas-station
   show "decide-gas"
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-647
-448
+723
+524
 -1
 -1
-13.0
+5.0
 1
 10
 1
@@ -133,10 +130,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-50
+50
+-50
+50
 0
 0
 1
@@ -186,11 +183,7 @@ nr-of-drivers
 nr-of-drivers
 0
 100
-<<<<<<< HEAD
 1.0
-=======
-5.0
->>>>>>> 6504baf37e5d183e0eabf9cbdb2663568982ce09
 1
 1
 NIL
@@ -538,11 +531,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-<<<<<<< HEAD
-NetLogo 6.0.2
-=======
 NetLogo 6.0.3
->>>>>>> 6504baf37e5d183e0eabf9cbdb2663568982ce09
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

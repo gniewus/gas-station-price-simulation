@@ -49,6 +49,11 @@ daily:
 hourly:
 - gas stations change there price according to demand, prices of close gas stations and the raw oil price
 
+metrics:
+	1 tick = 1 hour = 60 steps
+	1 step = 1 min = 1 distance = 0.25 liter of gasoline
+	note: we don't measure distance in km or miles, only in the abstract value "distance"/"steps"
+
 
 How to choose the gas station for refuel?
 	which gas stations can I reach?
