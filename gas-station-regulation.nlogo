@@ -7,51 +7,53 @@ breed [
 ]
 
 gas-stations-own [
-  isMarketLeader?
-  priceAdjustmentPercent
-  pricePerLiter
+  is-market-leader?
+  price-adjustment-percent
+  price-per-liter
 ]
 
 drivers-own [
-
   capacity ;; Maximale kapazität: 40-80 Liter
-  leftGasoline ;; Wie viel noch im tank übrig ist
+  left-gasoline ;; Wie viel noch im tank übrig ist
   picked-station ;; The gas station that the user picked from all of the posibilitis within the kilometer range he can reach
-  price-sensivity ;; [0-1]
-  distance-sensitivity;; [0-1]
-  ;; Here eventually Benzinverbrauch pro Tick
-
+  price-sensitivity ;; [0-1]
+  distance-sensitivity ;; [0-1]
+  refuel-counter ;; [0-5] counts down the ticks that pass while refueling at a gas station (5 min)
+  ;; Here eventually gasoline consumption per tick
 ]
 
 globals [
-  rawOilPricePerLiter
+  raw-oil-price-per-liter
+  gasoline-consumption-per-step
+  refueling-duration
 ]
 
 to setup
   clear-all
-  set-default-shape gas-stations "house"
+  set gasoline-consumption-per-step 0.25
+  set refueling-duration 10
 
+  set-default-shape gas-stations "house"
   create-gas-stations 5 [
     setxy random-xcor random-ycor
-    set isMarketLeader? false
+    set is-market-leader? false
     set size 3
   ]
-
   ask gas-station 0 [
-    set isMarketLeader? true
+    set is-market-leader? true
     set size 4
   ]
 
   create-drivers nr-of-drivers [
-
     set capacity ((random 40) + 40)
-    show (word "capacity :" capacity)
-    set leftGasoline capacity
+    set left-gasoline capacity
+    set distance-sensitivity random-float 1
+    set price-sensitivity random-float 1
     setxy random-xcor random-ycor
     set size 2
   ]
 
-  set rawOilPricePerLiter 50
+  set raw-oil-price-per-liter 50
   reset-ticks
 end
 
@@ -60,57 +62,97 @@ to go
   tick
 end
 
+to drive
+  set left-gasoline left-gasoline - gasoline-consumption-per-step
+  if left-gasoline > 0 [
+    fd 1
+  ]
+end
+
 to move-drivers
   repeat 60 [
     ask drivers [
-
-      ifelse compute-left-gas-ratio > 20
-      [
-
-        ; show compute-left-gas-ratio
-
+      ifelse compute-left-gasoline-ratio > 20 [
+        drive
       ][
-
-        go-to-station
-
-
+        drive-to-station
       ]
-      set leftGasoline leftGasoline - 0.25
-      fd 1
     ]
   ]
 end
 
+to-report compute-left-gasoline-ratio
+    report left-gasoline / capacity * 100
+end
 
-to-report compute-left-gasoline
-  show leftGasoline
+to drive-to-station
+  if picked-station = 0 [
+    set picked-station find-best-gas-station
+    face picked-station
+  ]
+
+  ifelse distance picked-station >= 1 [
+    drive
+  ][
+    refuel
+  ]
+end
+
+to refuel
+  ifelse refuel-counter = 0 [
+    ;; this is executed, when the driver enters the gas station
+    set refuel-counter refueling-duration
+  ][
+    if refuel-counter = 1 [
+      ;; this is executed, when refueling is finished (after waiting 5 minutes at the gas station)
+      set left-gasoline capacity
+      set picked-station 0
+      facexy ((random max-pxcor * 2) - max-pxcor) ((random max-pycor * 2) - max-pycor) ; choose a random patch within the map to face
+    ]
+  ]
+  set refuel-counter refuel-counter - 1
+end
+
+to-report find-best-gas-station
+  let possible-gas-stations search-gas-stations-in-range
+  let best-station gas-station 0 ; set a random gas station to be overwritten
+  let best-likeliness 100 ; set to a very high value to be overwritten by better solutions
+
+  foreach possible-gas-stations [ station ->
+    let price-summand price-sensitivity * [price-per-liter] of station
+    let distance-summand distance-sensitivity * (distance station / compute-remaining-range)
+    let likeliness price-summand + distance-summand
+
+    if likeliness < best-likeliness [
+      set best-likeliness likeliness
+      set best-station station
+    ]
+  ]
+
+  report best-station
 end
 
 
-to-report compute-left-gas-ratio
-    let ratio 0
-    set ratio  leftGasoline / capacity
-    set ratio ratio * 100
-    report ratio
-end
-
-to go-to-station
-
-  ;show "go-to-station"
-end
-
-
-to search-gas-station
+to-report search-gas-stations-in-range
   let in-range []
-
+  foreach list-all-gas-stations [ station ->
+    if distance station < compute-remaining-range [
+      set in-range lput station in-range
+    ]
+  ]
+  report in-range
 end
 
-to compute-likeliness
-  ;;set result distance-sensitivity * (/ 20)   price-sensivity
+to-report compute-remaining-range
+  report left-gasoline * (1 / gasoline-consumption-per-step)
 end
 
-to decide-gas-station
-  show "decide-gas"
+to-report list-all-gas-stations
+  let stations []
+  ask gas-stations [
+    set stations lput self stations
+  ]
+  report stations
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
