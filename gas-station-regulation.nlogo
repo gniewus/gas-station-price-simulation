@@ -7,23 +7,24 @@ breed [
 ]
 
 gas-stations-own [
-  is-market-leader?
-  price-adjustment-percent
-  price-per-liter
+  is-market-leader? ;; [false, true] false = is a market follower, true = is a market leader
+  price-adjustment ;; price adjustment in cent -> market leaders adjust relative to raw oil price, market followers relative to market leaders
+  price ;; current price per liter of gasoline
+  total-profit ;; price - raw-oil-price -> sum of all sales made by this gas station
 ]
 
 drivers-own [
-  capacity ;; Maximale kapazität: 40-80 Liter
-  left-gasoline ;; Wie viel noch im tank übrig ist
+  capacity ;; [40-80] Maximale kapazität: 40-80 Liter
+  left-gasoline ;; [0-capacity] Wie viel noch im tank übrig ist
   picked-station ;; The gas station that the user picked from all of the posibilitis within the kilometer range he can reach
   price-sensitivity ;; [0-1]
   distance-sensitivity ;; [0-1]
-  refuel-counter ;; [0-5] counts down the ticks that pass while refueling at a gas station (5 min)
-  ;; Here eventually gasoline consumption per tick
+  refuel-countdown ;; [0-10] (10 min) counts down the ticks that pass while refueling at a gas station
+  ;; Here eventually gasoline consumption per step
 ]
 
 globals [
-  raw-oil-price-per-liter
+  raw-oil-price ;; [1.00-1.30] the randomly set raw oil price
   gasoline-consumption-per-step
   refueling-duration
 ]
@@ -34,13 +35,16 @@ to setup
   set refueling-duration 10
 
   set-default-shape gas-stations "house"
+  set-default-shape drivers "default"
+
   create-gas-stations 5 [
-    setxy random-xcor random-ycor
     set is-market-leader? false
+    setxy random-xcor random-ycor
     set size 3
   ]
   ask gas-station 0 [
     set is-market-leader? true
+    set price-adjustment 0.08 ; TODO set to a dynamically value which makes sense
     set size 4
   ]
 
@@ -53,20 +57,40 @@ to setup
     set size 2
   ]
 
-  set raw-oil-price-per-liter 50
+  set raw-oil-price 50
   reset-ticks
 end
 
 to go
+  ifelse ticks mod 24 = 0 [
+    init-new-day
+  ][
+    update-prices
+  ]
   move-drivers
   tick
 end
 
-to drive
-  set left-gasoline left-gasoline - gasoline-consumption-per-step
-  if left-gasoline > 0 [
-    fd 1
+to init-new-day
+  set raw-oil-price 1 + (random-float 0.3)
+  output-print (word "Day " get-current-day " - raw oil price: " precision raw-oil-price 2 " €")
+
+  ask gas-stations [
+    ifelse is-market-leader? [
+      set price raw-oil-price + price-adjustment
+    ][
+      let mean-price-of-leaders raw-oil-price + mean [price-adjustment] of gas-stations with [is-market-leader?] ;; prediction of mean leader price
+      set price mean-price-of-leaders + price-adjustment
+    ]
   ]
+end
+
+to update-prices
+  ; TODO the hourly price update of all stations will happen here
+end
+
+to-report get-current-day
+  report (ticks / 24) + 1
 end
 
 to move-drivers
@@ -85,6 +109,13 @@ to-report compute-left-gasoline-ratio
     report left-gasoline / capacity * 100
 end
 
+to drive
+  set left-gasoline left-gasoline - gasoline-consumption-per-step
+  if left-gasoline > 0 [
+    fd 1
+  ]
+end
+
 to drive-to-station
   if picked-station = 0 [
     set picked-station find-best-gas-station
@@ -99,18 +130,22 @@ to drive-to-station
 end
 
 to refuel
-  ifelse refuel-counter = 0 [
+  ifelse refuel-countdown = 0 [
     ;; this is executed, when the driver enters the gas station
-    set refuel-counter refueling-duration
+    set refuel-countdown refueling-duration
+    let liter capacity - left-gasoline
+    ask picked-station [
+      set total-profit total-profit + (liter * (price - raw-oil-price))
+    ]
   ][
-    if refuel-counter = 1 [
-      ;; this is executed, when refueling is finished (after waiting 5 minutes at the gas station)
+    if refuel-countdown = 1 [
+      ;; this is executed, when refueling is finished (after waiting <refueling-duration> minutes at the gas station)
       set left-gasoline capacity
       set picked-station 0
       facexy ((random max-pxcor * 2) - max-pxcor) ((random max-pycor * 2) - max-pycor) ; choose a random patch within the map to face
     ]
   ]
-  set refuel-counter refuel-counter - 1
+  set refuel-countdown refuel-countdown - 1
 end
 
 to-report find-best-gas-station
@@ -119,7 +154,7 @@ to-report find-best-gas-station
   let best-likeliness 100 ; set to a very high value to be overwritten by better solutions
 
   foreach possible-gas-stations [ station ->
-    let price-summand price-sensitivity * [price-per-liter] of station
+    let price-summand price-sensitivity * [price] of station
     let distance-summand distance-sensitivity * (distance station / compute-remaining-range)
     let likeliness price-summand + distance-summand
 
@@ -132,7 +167,6 @@ to-report find-best-gas-station
   report best-station
 end
 
-
 to-report search-gas-stations-in-range
   let in-range []
   foreach list-all-gas-stations [ station ->
@@ -143,16 +177,16 @@ to-report search-gas-stations-in-range
   report in-range
 end
 
-to-report compute-remaining-range
-  report left-gasoline * (1 / gasoline-consumption-per-step)
-end
-
 to-report list-all-gas-stations
   let stations []
   ask gas-stations [
     set stations lput self stations
   ]
   report stations
+end
+
+to-report compute-remaining-range
+  report left-gasoline * (1 / gasoline-consumption-per-step)
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
