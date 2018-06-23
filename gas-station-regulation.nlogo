@@ -98,7 +98,7 @@ to update-prices
         let price-diff [price] of station - price
         let market-share (item (get-hour - 1) ([customers-per-hour] of station)) / customer-sum
         let normalized-distance (max-distance - distance station) / max-distance
-        set amount-to-adjust price-diff * (market-share + normalized-distance)
+        set amount-to-adjust price-diff * market-share * normalized-distance
       ]
       set price price + amount-to-adjust
     ]
