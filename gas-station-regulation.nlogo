@@ -28,12 +28,14 @@ globals [
   raw-oil-price ;; [1.00-1.30] the randomly set raw oil price
   gasoline-consumption-per-step
   refueling-duration
+  max-distance
 ]
 
 to setup
   clear-all
   set gasoline-consumption-per-step 0.25
   set refueling-duration 10
+  set max-distance sqrt ((max-pxcor * max-pxcor) + (max-pycor * max-pycor))
 
   set-default-shape gas-stations "house"
   set-default-shape drivers "default"
@@ -45,11 +47,8 @@ to setup
     setxy random-xcor random-ycor
     set size 3
   ]
-  ask gas-station 0 [
-    set is-market-leader? true
-    set price-adjustment 0.08 ; TODO set to a dynamically value which makes sense
-    set size 4
-  ]
+  set-as-leader 0
+  set-as-leader 1
 
   create-drivers nr-of-drivers [
     set capacity ((random 40) + 40)
@@ -76,13 +75,13 @@ end
 
 to init-new-day
   set raw-oil-price 1 + (random-float 0.3)
-  output-print (word "Day " (day + 1) " - raw oil price: " precision raw-oil-price 2 " €")
+  output-print (word "Day " (get-day + 1) " - raw oil price: " precision raw-oil-price 2 " €")
 
   ask gas-stations [
     ifelse is-market-leader? [
       set price raw-oil-price + price-adjustment
     ][
-      let mean-price-of-leaders raw-oil-price + mean [price-adjustment] of gas-stations with [is-market-leader?] ;; prediction of mean leader price
+      let mean-price-of-leaders raw-oil-price + mean [price-adjustment] of gas-stations with [is-market-leader?] ;; prediction of mean leader prices
       set price mean-price-of-leaders + price-adjustment
     ]
     set customers-per-hour lput 0 customers-per-hour ;; setup the customer counter for the new hour
@@ -92,19 +91,21 @@ end
 
 to update-prices
   ask gas-stations [
-
+    let customer-sum (customers-of-all-gas-stations (get-hour - 1))
+    if customer-sum > 0 [
+      let amount-to-adjust 0
+      foreach list-all-gas-stations [ station ->
+        let price-diff [price] of station - price
+        let market-share (item (get-hour - 1) ([customers-per-hour] of station)) / customer-sum
+        let normalized-distance (max-distance - distance station) / max-distance
+        set amount-to-adjust price-diff * (market-share + normalized-distance)
+      ]
+      set price price + amount-to-adjust
+    ]
 
     set customers-per-hour lput 0 customers-per-hour ;; setup the customer counter for the new hour
     set profit-per-hour lput 0 profit-per-hour ;; setup the profit counter for the new hour
   ]
-end
-
-to-report day
-  report (ticks / 24)
-end
-
-to-report hour
-  report ticks
 end
 
 to move-drivers
@@ -117,10 +118,6 @@ to move-drivers
       ]
     ]
   ]
-end
-
-to-report compute-left-gasoline-ratio
-    report left-gasoline / capacity * 100
 end
 
 to drive
@@ -163,8 +160,16 @@ to refuel
 end
 
 to account-refueling [liter]
-  set customers-per-hour replace-item hour customers-per-hour (item hour customers-per-hour + 1)
-  set profit-per-hour replace-item hour profit-per-hour (item hour profit-per-hour + (liter * (price - raw-oil-price)))
+  set customers-per-hour replace-item get-hour customers-per-hour (item get-hour customers-per-hour + 1)
+  set profit-per-hour replace-item get-hour profit-per-hour (item get-hour profit-per-hour + (liter * (price - raw-oil-price)))
+end
+
+to-report customers-of-all-gas-stations [hour]
+  let customer-sum 0
+  ask gas-stations [
+    set customer-sum customer-sum + item hour customers-per-hour
+  ]
+  report customer-sum
 end
 
 to-report find-best-gas-station
@@ -208,8 +213,28 @@ to-report list-all-gas-stations
   report stations
 end
 
+to-report compute-left-gasoline-ratio
+    report left-gasoline / capacity * 100
+end
+
 to-report compute-remaining-range
   report left-gasoline * (1 / gasoline-consumption-per-step)
+end
+
+to set-as-leader [id]
+  ask gas-station id [
+    set is-market-leader? true
+    set price-adjustment random-float 0.15
+    set size 4
+  ]
+end
+
+to-report get-day
+  report (ticks / 24)
+end
+
+to-report get-hour
+  report ticks
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
