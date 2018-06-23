@@ -25,6 +25,7 @@ drivers-own [
 ]
 
 globals [
+  nr-of-gas-stations ;; 5
   raw-oil-price ;; [1.00-1.30] the randomly set raw oil price
   gasoline-consumption-per-step
   refueling-duration
@@ -33,6 +34,7 @@ globals [
 
 to setup
   clear-all
+  set nr-of-gas-stations 5
   set gasoline-consumption-per-step 0.25
   set refueling-duration 10
   set max-distance sqrt ((max-pxcor * max-pxcor) + (max-pycor * max-pycor))
@@ -40,7 +42,7 @@ to setup
   set-default-shape gas-stations "house"
   set-default-shape drivers "default"
 
-  create-gas-stations 5 [
+  create-gas-stations nr-of-gas-stations [
     set is-market-leader? false
     set customers-per-hour []
     set profit-per-hour []
@@ -90,17 +92,37 @@ to init-new-day
 end
 
 to update-prices
+  let customer-sum (customers-of-all-gas-stations (get-hour - 1))
+
   ask gas-stations [
-    let customer-sum (customers-of-all-gas-stations (get-hour - 1))
     if customer-sum > 0 [
       let amount-to-adjust 0
+
+      ;; calculate adjustment by competition
       foreach list-all-gas-stations [ station ->
         let price-diff [price] of station - price
         let market-share (item (get-hour - 1) ([customers-per-hour] of station)) / customer-sum
         let normalized-distance (max-distance - distance station) / max-distance
         set amount-to-adjust price-diff * market-share * normalized-distance
       ]
+
+      ;; calculate adjustment by own demand
+      let own-market-share (item (get-hour - 1) customers-per-hour) / customer-sum
+      let average-market-share 1 / nr-of-gas-stations
+      if own-market-share < average-market-share [
+        let additional-amount-to-adjust 0
+        ifelse own-market-share = 0 [
+          set additional-amount-to-adjust (- customer-sum) / 100
+        ][
+          set additional-amount-to-adjust (- (average-market-share / own-market-share)) / 100
+        ]
+        set amount-to-adjust amount-to-adjust + additional-amount-to-adjust
+      ]
+
       set price price + amount-to-adjust
+      if price <= raw-oil-price [
+        set price raw-oil-price
+      ]
     ]
 
     set customers-per-hour lput 0 customers-per-hour ;; setup the customer counter for the new hour
