@@ -10,7 +10,8 @@ gas-stations-own [
   is-market-leader? ;; [false, true] false = is a market follower, true = is a market leader
   price-adjustment ;; price adjustment in cent -> market leaders adjust relative to raw oil price, market followers relative to market leaders
   price ;; current price per liter of gasoline
-  total-profit ;; price - raw-oil-price -> sum of all sales made by this gas station
+  customers-per-hour ;; sum of all customers of this gas station per hour
+  profit-per-hour ;; price - raw-oil-price -> sum of all sales made by this gas station per hour
 ]
 
 drivers-own [
@@ -39,6 +40,8 @@ to setup
 
   create-gas-stations 5 [
     set is-market-leader? false
+    set customers-per-hour []
+    set profit-per-hour []
     setxy random-xcor random-ycor
     set size 3
   ]
@@ -73,7 +76,7 @@ end
 
 to init-new-day
   set raw-oil-price 1 + (random-float 0.3)
-  output-print (word "Day " get-current-day " - raw oil price: " precision raw-oil-price 2 " €")
+  output-print (word "Day " (day + 1) " - raw oil price: " precision raw-oil-price 2 " €")
 
   ask gas-stations [
     ifelse is-market-leader? [
@@ -82,15 +85,26 @@ to init-new-day
       let mean-price-of-leaders raw-oil-price + mean [price-adjustment] of gas-stations with [is-market-leader?] ;; prediction of mean leader price
       set price mean-price-of-leaders + price-adjustment
     ]
+    set customers-per-hour lput 0 customers-per-hour ;; setup the customer counter for the new hour
+    set profit-per-hour lput 0 profit-per-hour ;; setup the profit counter for the new hour
   ]
 end
 
 to update-prices
-  ; TODO the hourly price update of all stations will happen here
+  ask gas-stations [
+
+
+    set customers-per-hour lput 0 customers-per-hour ;; setup the customer counter for the new hour
+    set profit-per-hour lput 0 profit-per-hour ;; setup the profit counter for the new hour
+  ]
 end
 
-to-report get-current-day
-  report (ticks / 24) + 1
+to-report day
+  report (ticks / 24)
+end
+
+to-report hour
+  report ticks
 end
 
 to move-drivers
@@ -135,7 +149,7 @@ to refuel
     set refuel-countdown refueling-duration
     let liter capacity - left-gasoline
     ask picked-station [
-      set total-profit total-profit + (liter * (price - raw-oil-price))
+      account-refueling liter
     ]
   ][
     if refuel-countdown = 1 [
@@ -148,15 +162,18 @@ to refuel
   set refuel-countdown refuel-countdown - 1
 end
 
+to account-refueling [liter]
+  set customers-per-hour replace-item hour customers-per-hour (item hour customers-per-hour + 1)
+  set profit-per-hour replace-item hour profit-per-hour (item hour profit-per-hour + (liter * (price - raw-oil-price)))
+end
+
 to-report find-best-gas-station
   let possible-gas-stations search-gas-stations-in-range
   let best-station gas-station 0 ; set a random gas station to be overwritten
   let best-likeliness 100 ; set to a very high value to be overwritten by better solutions
 
   foreach possible-gas-stations [ station ->
-    let price-summand price-sensitivity * [price] of station
-    let distance-summand distance-sensitivity * (distance station / compute-remaining-range)
-    let likeliness price-summand + distance-summand
+    let likeliness compute-likeliness station
 
     if likeliness < best-likeliness [
       set best-likeliness likeliness
@@ -165,6 +182,12 @@ to-report find-best-gas-station
   ]
 
   report best-station
+end
+
+to-report compute-likeliness [station]
+  let price-summand price-sensitivity * [price] of station
+  let distance-summand distance-sensitivity * (distance station / compute-remaining-range)
+  report price-summand + distance-summand
 end
 
 to-report search-gas-stations-in-range
@@ -257,7 +280,7 @@ SLIDER
 94
 nr-of-drivers
 nr-of-drivers
-0
+1
 100
 1.0
 1
