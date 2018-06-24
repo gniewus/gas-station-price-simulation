@@ -21,6 +21,7 @@ drivers-own [
   price-sensitivity ;; [0-1]
   distance-sensitivity ;; [0-1]
   refuel-countdown ;; [0-10] (10 min) counts down the ticks that pass while refueling at a gas station
+  sleeps-over-night;; tells if the drivers sleeps over night
   ;; Here eventually gasoline consumption per step
 ]
 
@@ -34,13 +35,13 @@ globals [
 
 to setup
   clear-all
-  set nr-of-gas-stations 5
-  set gasoline-consumption-per-step 0.25
+  set nr-of-gas-stations nr-of-stations
+  set gasoline-consumption-per-step gasoline-consumption
   set refueling-duration 10
   set max-distance sqrt ((max-pxcor * max-pxcor) + (max-pycor * max-pycor))
 
-  set-default-shape gas-stations "house"
-  set-default-shape drivers "default"
+  set-default-shape gas-stations "gas-station-1"
+  set-default-shape drivers "car top"
 
   create-gas-stations nr-of-gas-stations [
     set is-market-leader? false
@@ -48,6 +49,7 @@ to setup
     set profit-per-hour []
     setxy random-xcor random-ycor
     set size 3
+
   ]
   set-as-leader 0
   set-as-leader 1
@@ -58,25 +60,33 @@ to setup
     set distance-sensitivity random-float 1
     set price-sensitivity random-float 1
     setxy random-xcor random-ycor
+    set sleeps-over-night random-float 1 < 0.5
     set size 2
   ]
 
-  set raw-oil-price 50
+  set raw-oil-price 1
   reset-ticks
 end
 
 to go
+  do-plotting
   ifelse ticks mod 24 = 0 [
     init-new-day
   ][
     update-prices
+     ask gas-stations [
+  ifelse is-market-leader?
+    [ set label (word  precision price 3 )]
+    [ set label (word  precision price 3) ]
+  ]
   ]
   move-drivers
+
   tick
 end
 
 to init-new-day
-  set raw-oil-price 1 + (random-float 0.3)
+  set raw-oil-price 0.5 + (random-float 0.5)
   output-print (word "Day " (get-day + 1) " - raw oil price: " precision raw-oil-price 2 " €")
 
   ask gas-stations [
@@ -131,15 +141,38 @@ to update-prices
 end
 
 to move-drivers
-  repeat 60 [
-    ask drivers [
-      ifelse compute-left-gasoline-ratio > 20 [
+  ;; I think over night, at least some of them should sleep i.e does not move to better match the reality
+  let nigth member? get-hour [22 23 24 0 1 2 3 4 5 6]
+
+  ifelse nigth = true
+  [  repeat 60 [
+    ask drivers with [sleeps-over-night = false] [
+
+      ifelse compute-left-gasoline-ratio > drive-to-station-treshold [
         drive
       ][
         drive-to-station
       ]
+
     ]
   ]
+  ]
+  [
+    repeat 60 [
+    ask drivers [
+
+      ifelse compute-left-gasoline-ratio > drive-to-station-treshold [
+        drive
+      ][
+        drive-to-station
+      ]
+
+    ]
+  ]
+
+  ]
+
+
 end
 
 to drive
@@ -246,6 +279,7 @@ end
 to set-as-leader [id]
   ask gas-station id [
     set is-market-leader? true
+    set shape  "gas-station-leader"
     set price-adjustment random-float 0.15
     set size 4
   ]
@@ -258,15 +292,61 @@ end
 to-report get-hour
   report ticks
 end
+
+to-report plot-price-of-station [number]
+  let tmp 0
+  ask gas-station number [
+     set tmp price
+  ]
+
+  report tmp
+end
+
+
+to do-plotting
+
+
+ ;;let stations  list-all-gas-stations
+  ;;let av mean stations price
+
+  ;;Ausgabe im Fitness-Plot
+  set-current-plot "price/liter"
+  set-current-plot-pen "1 L"
+    plot plot-price-of-station 1
+  set-current-plot-pen "2 L"
+    plot plot-price-of-station 2
+  set-current-plot-pen "3"
+    plot plot-price-of-station 3
+   set-current-plot-pen "4"
+    plot plot-price-of-station 4
+   set-current-plot-pen "5"
+    plot plot-price-of-station 5
+
+    set-current-plot "Raw Oil & Avg Gas Price"
+  set-current-plot-pen "raw-oil"
+    plot raw-oil-price
+  set-current-plot-pen "av-price"
+    plot mean [price] of gas-stations
+
+end
+
+
+to-report get-clock
+  report (word "Day "precision (get-hour / 24)  -1 " - " (get-hour mod 24) ":00" )
+end
+
+to-report get-raw-oil-price
+  report raw-oil-price
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+187
 10
-723
-524
+783
+607
 -1
 -1
-5.0
+5.822
 1
 10
 1
@@ -329,11 +409,130 @@ nr-of-drivers
 nr-of-drivers
 1
 100
-1.0
+40.0
 1
 1
 NIL
 HORIZONTAL
+
+PLOT
+792
+10
+1330
+222
+Price/Liter
+Time
+Price
+1.0
+30.0
+1.0
+1.5
+true
+true
+"" ""
+PENS
+"1 L" 1.0 0 -14730904 true "" ""
+"2 L" 1.0 0 -7500403 true "" ""
+"3" 1.0 0 -2674135 true "" ""
+"4" 1.0 0 -955883 true "" ""
+"5" 1.0 0 -6459832 true "" ""
+
+MONITOR
+791
+232
+917
+293
+Raw Oil Price 
+get-raw-oil-price
+5
+1
+15
+
+SWITCH
+10
+100
+148
+133
+show-labels?
+show-labels?
+0
+1
+-1000
+
+SLIDER
+12
+142
+184
+175
+drive-to-station-treshold
+drive-to-station-treshold
+10
+50
+25.0
+5
+1
+NIL
+HORIZONTAL
+
+PLOT
+927
+231
+1331
+605
+Raw Oil & Avg Gas Price
+Price
+Time
+0.5
+2.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"raw-oil" 1.0 0 -16777216 true "" ""
+"av-price" 1.0 0 -5298144 true "" ""
+
+SLIDER
+11
+182
+185
+215
+gasoline-consumption
+gasoline-consumption
+0
+1
+0.17
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+11
+222
+183
+255
+nr-of-stations
+nr-of-stations
+1
+10
+7.0
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+791
+298
+915
+343
+Clock
+get-clock
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -428,6 +627,21 @@ Polygon -16777216 true false 162 80 132 78 134 135 209 135 194 105 189 96 180 89
 Circle -7500403 true true 47 195 58
 Circle -7500403 true true 195 195 58
 
+car top
+true
+0
+Polygon -7500403 true true 151 8 119 10 98 25 86 48 82 225 90 270 105 289 150 294 195 291 210 270 219 225 214 47 201 24 181 11
+Polygon -16777216 true false 210 195 195 210 195 135 210 105
+Polygon -16777216 true false 105 255 120 270 180 270 195 255 195 225 105 225
+Polygon -16777216 true false 90 195 105 210 105 135 90 105
+Polygon -1 true false 205 29 180 30 181 11
+Line -7500403 false 210 165 195 165
+Line -7500403 false 90 165 105 165
+Polygon -16777216 true false 121 135 180 134 204 97 182 89 153 85 120 89 98 97
+Line -16777216 false 210 90 195 30
+Line -16777216 false 90 90 105 30
+Polygon -1 true false 95 29 120 30 119 11
+
 circle
 false
 0
@@ -514,13 +728,43 @@ Circle -16777216 true false 113 68 74
 Polygon -10899396 true false 189 233 219 188 249 173 279 188 234 218
 Polygon -10899396 true false 180 255 150 210 105 210 75 240 135 240
 
-house
+gas-station
 false
 0
-Rectangle -7500403 true true 45 120 255 285
-Rectangle -16777216 true false 120 210 180 285
-Polygon -7500403 true true 15 120 150 15 285 120
-Line -16777216 false 30 120 270 120
+Rectangle -7500403 true true 56 18 219 276
+Circle -7500403 true true 180 90 0
+Rectangle -7500403 true true 21 275 253 294
+Rectangle -7500403 false true 92 49 175 103
+Rectangle -16777216 true false 73 46 200 103
+Circle -16777216 false false 297 227 0
+Rectangle -7500403 true true 261 87 270 120
+Rectangle -7500403 true true 317 122 322 279
+Rectangle -7500403 true true 210 75 270 90
+Line -7500403 true 270 105 210 270
+
+gas-station-1
+false
+0
+Rectangle -7500403 true true 90 30 225 300
+Rectangle -7500403 true true 45 285 270 300
+Rectangle -16777216 true false 105 45 210 105
+Rectangle -7500403 true true 225 60 285 75
+Rectangle -7500403 true true 270 60 285 105
+Line -7500403 true 285 105 225 285
+Line -7500403 true 270 105 210 285
+
+gas-station-leader
+false
+0
+Rectangle -7500403 true true 90 30 225 300
+Rectangle -7500403 true true 45 285 270 300
+Rectangle -16777216 true false 105 45 210 105
+Rectangle -7500403 true true 225 60 285 75
+Rectangle -7500403 true true 270 60 285 105
+Line -7500403 true 285 105 225 285
+Line -7500403 true 270 105 210 285
+Circle -7500403 true true 30 60 0
+Polygon -1184463 false false 30 120 45 90 60 120 60 90 75 75 60 60 60 30 45 60 30 30 30 60 15 75 30 90 30 120 30 120
 
 leaf
 false
@@ -677,7 +921,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.3
+NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
