@@ -76,10 +76,10 @@ to go
     init-new-day
   ][
     update-prices
-     ask gas-stations [
-  ask gas-stations[
+
+      ask gas-stations[
         set label (word  precision price 3 )]
-  ]
+
   ]
   move-drivers
 
