@@ -46,8 +46,10 @@ to setup
   create-gas-stations nr-of-gas-stations [
     set is-market-leader? false
     set customers-per-hour []
+    set price 1 + random 0.5
     set profit-per-hour []
     setxy random-xcor random-ycor
+    set color red
     set size 3
 
   ]
@@ -75,9 +77,8 @@ to go
   ][
     update-prices
      ask gas-stations [
-  ifelse is-market-leader?
-    [ set label (word  precision price 3 )]
-    [ set label (word  precision price 3) ]
+  ask gas-stations[
+        set label (word  precision price 3 )]
   ]
   ]
   move-drivers
@@ -85,6 +86,9 @@ to go
   tick
 end
 
+to to-set-color-to-station
+  ;; here comes the function to set the same colors as in the plot
+end
 to init-new-day
   set raw-oil-price 0.5 + (random-float 0.5)
   output-print (word "Day " (get-day + 1) " - raw oil price: " precision raw-oil-price 2 " €")
