@@ -142,37 +142,22 @@ end
 
 to move-drivers
   ;; I think over night, at least some of them should sleep i.e does not move to better match the reality
-  let nigth member? get-hour [22 23 24 0 1 2 3 4 5 6]
+  let night member? get-hour [22 23 24 0 1 2 3 4 5 6]
 
-  ifelse nigth = true
-  [  repeat 60 [
-    ask drivers with [sleeps-over-night = false] [
+  let active-drivers drivers
+  if night = true [
+    set active-drivers drivers with [sleeps-over-night = false]
+  ]
 
+  repeat 60 [
+    ask active-drivers [
       ifelse compute-left-gasoline-ratio > drive-to-station-treshold [
         drive
       ][
         drive-to-station
       ]
-
     ]
   ]
-  ]
-  [
-    repeat 60 [
-    ask drivers [
-
-      ifelse compute-left-gasoline-ratio > drive-to-station-treshold [
-        drive
-      ][
-        drive-to-station
-      ]
-
-    ]
-  ]
-
-  ]
-
-
 end
 
 to drive
@@ -298,7 +283,6 @@ to-report plot-price-of-station [number]
   ask gas-station number [
      set tmp price
   ]
-
   report tmp
 end
 
@@ -312,15 +296,15 @@ to do-plotting
   ;;Ausgabe im Fitness-Plot
   set-current-plot "price/liter"
   set-current-plot-pen "1 L"
-    plot plot-price-of-station 1
+    plot plot-price-of-station 0
   set-current-plot-pen "2 L"
-    plot plot-price-of-station 2
+    plot plot-price-of-station 1
   set-current-plot-pen "3"
-    plot plot-price-of-station 3
+    plot plot-price-of-station 2
    set-current-plot-pen "4"
-    plot plot-price-of-station 4
+    plot plot-price-of-station 3
    set-current-plot-pen "5"
-    plot plot-price-of-station 5
+    plot plot-price-of-station 4
 
     set-current-plot "Raw Oil & Avg Gas Price"
   set-current-plot-pen "raw-oil"
