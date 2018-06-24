@@ -12,6 +12,8 @@ gas-stations-own [
   price ;; current price per liter of gasoline
   customers-per-hour ;; sum of all customers of this gas station per hour
   profit-per-hour ;; price - raw-oil-price -> sum of all sales made by this gas station per hour
+  profit-total ;;  sum of all sales made by this gas station
+  customers-total;;
 ]
 
 drivers-own [
@@ -48,6 +50,7 @@ to setup
     set customers-per-hour []
     set price 1 + random 0.5
     set profit-per-hour []
+    set profit-total 0
     setxy random-xcor random-ycor
     set color red
     set size 3
@@ -100,8 +103,11 @@ to init-new-day
       let mean-price-of-leaders raw-oil-price + mean [price-adjustment] of gas-stations with [is-market-leader?] ;; prediction of mean leader prices
       set price mean-price-of-leaders + price-adjustment
     ]
+
     set customers-per-hour lput 0 customers-per-hour ;; setup the customer counter for the new hour
     set profit-per-hour lput 0 profit-per-hour ;; setup the profit counter for the new hour
+
+
   ]
 end
 
@@ -138,6 +144,8 @@ to update-prices
         set price raw-oil-price
       ]
     ]
+    set profit-total sum profit-per-hour
+    set customers-total sum customers-per-hour
 
     set customers-per-hour lput 0 customers-per-hour ;; setup the customer counter for the new hour
     set profit-per-hour lput 0 profit-per-hour ;; setup the profit counter for the new hour
@@ -290,6 +298,23 @@ to-report plot-price-of-station [number]
   report tmp
 end
 
+to-report get-total-profit-of-station [number]
+  let tmp 0
+  ask gas-station number [
+     set tmp profit-total
+  ]
+  report tmp
+end
+
+to-report get-customers-of-station [number]
+  let tmp 0
+  ask gas-station number [
+     set tmp customers-total
+  ]
+  report tmp
+end
+
+
 
 to do-plotting
 
@@ -310,11 +335,35 @@ to do-plotting
    set-current-plot-pen "5"
     plot plot-price-of-station 4
 
-    set-current-plot "Raw Oil & Avg Gas Price"
+  set-current-plot "Raw Oil & Avg Gas Price"
   set-current-plot-pen "raw-oil"
     plot raw-oil-price
   set-current-plot-pen "av-price"
     plot mean [price] of gas-stations
+
+  set-current-plot "Profit"
+  set-current-plot-pen "1 L"
+    plot get-total-profit-of-station 0
+  set-current-plot-pen "2 L"
+    plot get-total-profit-of-station 1
+  set-current-plot-pen "3"
+    plot get-total-profit-of-station 2
+  set-current-plot-pen "4"
+    plot get-total-profit-of-station 3
+  set-current-plot-pen "5"
+    plot get-total-profit-of-station 4
+
+  set-current-plot "Customers"
+  set-current-plot-pen "1 L"
+    plot get-customers-of-station 0
+  set-current-plot-pen "2 L"
+    plot get-customers-of-station 1
+  set-current-plot-pen "3"
+    plot get-customers-of-station 2
+  set-current-plot-pen "4"
+    plot get-customers-of-station 3
+  set-current-plot-pen "5"
+    plot get-customers-of-station 4
 
 end
 
@@ -328,13 +377,13 @@ to-report get-raw-oil-price
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-187
-10
-783
-607
+3
+51
+577
+626
 -1
 -1
-5.822
+5.604
 1
 10
 1
@@ -389,10 +438,10 @@ NIL
 1
 
 SLIDER
-12
-61
-184
-94
+333
+10
+462
+43
 nr-of-drivers
 nr-of-drivers
 1
@@ -426,10 +475,10 @@ PENS
 "5" 1.0 0 -6459832 true "" ""
 
 MONITOR
-791
-232
-917
-293
+598
+90
+724
+151
 Raw Oil Price 
 get-raw-oil-price
 5
@@ -437,10 +486,10 @@ get-raw-oil-price
 15
 
 SWITCH
-10
-100
-148
-133
+600
+51
+738
+84
 show-labels?
 show-labels?
 0
@@ -448,10 +497,10 @@ show-labels?
 -1000
 
 SLIDER
-12
-142
-184
-175
+598
+10
+770
+43
 drive-to-station-treshold
 drive-to-station-treshold
 10
@@ -463,10 +512,10 @@ NIL
 HORIZONTAL
 
 PLOT
-927
-231
-1331
-605
+926
+230
+1330
+369
 Raw Oil & Avg Gas Price
 Price
 Time
@@ -475,17 +524,17 @@ Time
 0.0
 1.0
 true
-false
+true
 "" ""
 PENS
 "raw-oil" 1.0 0 -16777216 true "" ""
 "av-price" 1.0 0 -5298144 true "" ""
 
 SLIDER
-11
-182
-185
-215
+467
+10
+596
+43
 gasoline-consumption
 gasoline-consumption
 0
@@ -497,30 +546,74 @@ NIL
 HORIZONTAL
 
 SLIDER
-11
-222
-183
-255
+202
+10
+317
+43
 nr-of-stations
 nr-of-stations
 1
 10
-7.0
+5.0
 1
 1
 NIL
 HORIZONTAL
 
 MONITOR
-791
-298
-915
-343
+600
+158
+724
+203
 Clock
 get-clock
 17
 1
 11
+
+PLOT
+928
+379
+1332
+610
+Profit
+Total Profit
+Time
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"1 L" 1.0 0 -14070903 true "" ""
+"2 L" 1.0 0 -7500403 true "" ""
+"3" 1.0 0 -2674135 true "" ""
+"4" 1.0 0 -955883 true "" ""
+"5" 1.0 0 -6459832 true "" ""
+
+PLOT
+596
+381
+920
+610
+Customers
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"1 L" 1.0 0 -15390905 true "" "plot count turtles"
+"2 L" 1.0 0 -7500403 true "" ""
+"3" 1.0 0 -2674135 true "" ""
+"4" 1.0 0 -955883 true "" ""
+"5" 1.0 0 -6459832 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?
