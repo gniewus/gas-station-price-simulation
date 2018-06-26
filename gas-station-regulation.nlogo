@@ -517,8 +517,8 @@ PLOT
 1330
 369
 Raw Oil & Avg Gas Price
-Price
 Time
+Price
 0.5
 2.0
 0.0
@@ -577,8 +577,8 @@ PLOT
 1332
 610
 Profit
-Total Profit
 Time
+Total Profit
 0.0
 10.0
 0.0
@@ -599,8 +599,8 @@ PLOT
 920
 610
 Customers
-NIL
-NIL
+Time
+Total Customers
 0.0
 10.0
 0.0
@@ -609,7 +609,7 @@ true
 false
 "" ""
 PENS
-"1 L" 1.0 0 -15390905 true "" "plot count turtles"
+"1 L" 1.0 0 -15390905 true "" ""
 "2 L" 1.0 0 -7500403 true "" ""
 "3" 1.0 0 -2674135 true "" ""
 "4" 1.0 0 -955883 true "" ""
