@@ -207,11 +207,19 @@ to refuel
 
 
     let liter capacity - left-gasoline
+    let price-per-liter [price] of picked-station
 
+    if always-top-up? = false [
+      if length payed-liter-prices > 0 and price-per-liter > mean payed-liter-prices [
+        let liters-to-leave-empty liter * (mean payed-liter-prices / price-per-liter) * price-sensitivity
+        ;output-print (word liters-to-leave-empty " = " liter "l (zu tanken) * (" mean payed-liter-prices "/" price-per-liter ") * " price-sensitivity " (price-sensitivity)")
+        set liter liter - liters-to-leave-empty
+      ]
+    ]
 
     set left-gasoline capacity
     ask picked-station [account-refueling liter]
-    set payed-liter-prices lput [price] of picked-station payed-liter-prices ;; account the payed price per liter to learn what's a good price
+    set payed-liter-prices lput price-per-liter payed-liter-prices ;; account the payed price per liter to learn what's a good price
   ][
     if refuel-countdown = 1 [
       ;; this is executed, when refueling is finished (after waiting <refueling-duration> minutes at the gas station)
@@ -464,7 +472,7 @@ nr-of-drivers
 nr-of-drivers
 1
 100
-6.0
+50.0
 1
 1
 NIL
@@ -493,26 +501,15 @@ PENS
 "5" 1.0 0 -6459832 true "" ""
 
 MONITOR
-598
-90
-724
-151
+599
+98
+725
+159
 Raw Oil Price 
 get-raw-oil-price
 5
 1
 15
-
-SWITCH
-600
-51
-738
-84
-show-labels?
-show-labels?
-0
-1
--1000
 
 SLIDER
 598
@@ -580,9 +577,9 @@ HORIZONTAL
 
 MONITOR
 600
-158
+167
 724
-203
+212
 Clock
 get-clock
 17
@@ -632,6 +629,17 @@ PENS
 "3" 1.0 0 -2674135 true "" ""
 "4" 1.0 0 -955883 true "" ""
 "5" 1.0 0 -6459832 true "" ""
+
+SWITCH
+597
+53
+739
+87
+always-top-up?
+always-top-up?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
