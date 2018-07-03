@@ -387,7 +387,7 @@ end
 
 
 to-report get-clock
-  report (word "Day "precision (get-hour / 24)  -1 " - " (get-hour mod 24) ":00" )
+  report (word "Day " floor (get-day + 1) " - " get-hour-of-the-day ":00" )
 end
 
 to-report get-raw-oil-price
