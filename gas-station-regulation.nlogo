@@ -25,8 +25,14 @@ drivers-own [
   refuel-countdown ;; [0-10] (10 min) counts down the ticks that pass while refueling at a gas station
   sleeps-over-night ;; tells if the drivers sleeps over night
   payed-liter-prices ;; list with all payed prices per liter, to learn what's a good price
+  on-road;; Sets if the driver is going back to the road where he can continue the journey
   ;; Here eventually gasoline consumption per step
 ]
+patches-own [
+  vertical-road? ;; bool which determines if the patch is on the road
+  horizontal-road? ;;
+]
+
 
 globals [
   nr-of-gas-stations ;; 5
@@ -59,10 +65,30 @@ to setup
     set size 3
   ]
 
+  ask patches  [
+    set  horizontal-road? false
+    set vertical-road? false
+    set pcolor green
+    if pxcor = 25 or (pxcor = -25) [
+      set pcolor grey
+      set vertical-road? true
+
+    ]
+    if (pycor = 25) or pycor = -25 [
+      set pcolor grey
+      set horizontal-road? true
+
+    ]
+  ]
+
+
+
+
   set-as-leader 0
   set-as-leader 1
 
   create-drivers nr-of-drivers [
+    set on-road true
     set capacity ((random 40) + 40)
     set left-gasoline capacity
     set distance-sensitivity random-float 1
@@ -71,6 +97,27 @@ to setup
     setxy random-xcor random-ycor
     set sleeps-over-night random-float 1 < 0.5
     set size 2
+
+    if routes-system? [
+     let vertical-directions [0 180]
+     let horizontal-directions [90 270]
+     let sign random 2
+     if sign != 1 [
+        set sign -1
+      ]
+    ifelse random 2 < 1 [
+      let tmp-xcor random-xcor
+      setxy tmp-xcor (sign * 25)
+
+      set heading one-of horizontal-directions
+    ][
+      let tmp-ycor random-ycor
+      setxy (sign * 25) tmp-ycor
+
+      set heading one-of vertical-directions
+    ]
+    ]
+
   ]
 
   set raw-oil-price 1
@@ -173,6 +220,23 @@ to move-drivers
       ifelse picked-station != 0 or compute-left-gasoline-ratio < drive-to-station-treshold [
         drive-to-station
       ][
+
+        if not on-road and routes-system? [
+          let vertical-directions [0 180]
+          let horizontal-directions [90 270]
+          if [vertical-road?] of patch round xcor round ycor [
+            set on-road true
+            set heading one-of vertical-directions
+          ]
+
+          if [horizontal-road?] of  patch round xcor round ycor [
+            set on-road true
+            set heading one-of horizontal-directions
+
+          ]
+
+        ]
+
         drive
       ]
     ]
@@ -189,6 +253,7 @@ end
 to drive-to-station
   if picked-station = 0 [
     set picked-station find-best-gas-station
+    set on-road false
     face picked-station
   ]
 
