@@ -52,7 +52,7 @@ to setup
     set profit-per-hour []
     set profit-total 0
     setxy random-xcor random-ycor
-    set color red
+    set color get-plot-color
     set size 3
 
   ]
@@ -288,6 +288,14 @@ end
 
 to-report get-hour
   report ticks
+end
+
+to-report get-plot-color
+  if who = 0 [report blue]
+  if who = 1 [report gray]
+  if who = 2 [report red]
+  if who = 3 [report orange]
+  if who = 4 [report brown]
 end
 
 to-report plot-price-of-station [number]
