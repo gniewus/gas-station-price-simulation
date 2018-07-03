@@ -80,9 +80,9 @@ to go
   ][
     update-prices
 
-      ask gas-stations[
-        set label (word  precision price 3 )]
-
+    ask gas-stations [
+      set label (word precision price 3 )
+    ]
   ]
   move-drivers
 
@@ -93,7 +93,7 @@ to to-set-color-to-station
   ;; here comes the function to set the same colors as in the plot
 end
 to init-new-day
-  set raw-oil-price 0.5 + (random-float 0.5)
+  set raw-oil-price 1.0 + (random-float 0.3)
   output-print (word "Day " (get-day + 1) " - raw oil price: " precision raw-oil-price 2 " €")
 
   ask gas-stations [
@@ -154,11 +154,13 @@ end
 
 to move-drivers
   ;; I think over night, at least some of them should sleep i.e does not move to better match the reality
-  let night member? get-hour [22 23 24 0 1 2 3 4 5 6]
+  let night member? get-hour-of-the-day [22 23 24 0 1 2 3 4 5 6]
 
   let active-drivers drivers
-  if night = true [
+  ifelse night = true [
     set active-drivers drivers with [sleeps-over-night = false]
+  ][
+    set active-drivers drivers
   ]
 
   repeat 60 [
@@ -290,6 +292,10 @@ to-report get-hour
   report ticks
 end
 
+to-report get-hour-of-the-day
+  report ticks mod 24
+end
+
 to-report get-plot-color
   if who = 0 [report blue]
   if who = 1 [report gray]
@@ -322,11 +328,7 @@ to-report get-customers-of-station [number]
   report tmp
 end
 
-
-
 to do-plotting
-
-
  ;;let stations  list-all-gas-stations
   ;;let av mean stations price
 
@@ -372,7 +374,6 @@ to do-plotting
     plot get-customers-of-station 3
   set-current-plot-pen "5"
     plot get-customers-of-station 4
-
 end
 
 
@@ -454,7 +455,7 @@ nr-of-drivers
 nr-of-drivers
 1
 100
-40.0
+3.0
 1
 1
 NIL
@@ -471,7 +472,7 @@ Price
 1.0
 30.0
 1.0
-1.5
+1.3
 true
 true
 "" ""
@@ -513,7 +514,7 @@ drive-to-station-treshold
 drive-to-station-treshold
 10
 50
-25.0
+30.0
 5
 1
 NIL
@@ -547,7 +548,7 @@ gasoline-consumption
 gasoline-consumption
 0
 1
-0.17
+0.25
 0.01
 1
 NIL
@@ -1010,7 +1011,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.2
+NetLogo 6.0.3
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
