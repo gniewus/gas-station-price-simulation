@@ -39,7 +39,7 @@ globals [
 
 to setup
   clear-all
-  set nr-of-gas-stations nr-of-stations
+  set nr-of-gas-stations 5
   set gasoline-consumption-per-step gasoline-consumption
   set refueling-duration 10
   set max-distance sqrt ((max-pxcor * max-pxcor) + (max-pycor * max-pycor))
@@ -209,10 +209,10 @@ to refuel
     let liter capacity - left-gasoline
     let price-per-liter [price] of picked-station
 
-    if always-top-up? = false [
+    if allow-partial-refueling? [
       if length payed-liter-prices > 0 and price-per-liter > mean payed-liter-prices [
         let liters-to-leave-empty liter * (mean payed-liter-prices / price-per-liter) * price-sensitivity
-        ;output-print (word liters-to-leave-empty " = " liter "l (zu tanken) * (" mean payed-liter-prices "/" price-per-liter ") * " price-sensitivity " (price-sensitivity)")
+        output-print (word liters-to-leave-empty " = " liter "l (zu tanken) * (" mean payed-liter-prices "/" price-per-liter ") * " price-sensitivity " (price-sensitivity)")
         set liter liter - liters-to-leave-empty
       ]
     ]
@@ -464,10 +464,10 @@ NIL
 1
 
 SLIDER
-333
-10
-462
-43
+167
+12
+296
+45
 nr-of-drivers
 nr-of-drivers
 1
@@ -512,10 +512,10 @@ get-raw-oil-price
 15
 
 SLIDER
-598
-10
-770
-43
+433
+12
+605
+45
 drive-to-station-treshold
 drive-to-station-treshold
 10
@@ -546,31 +546,16 @@ PENS
 "av-price" 1.0 0 -5298144 true "" ""
 
 SLIDER
-467
-10
-596
-43
+302
+12
+431
+45
 gasoline-consumption
 gasoline-consumption
 0
 1
 0.25
 0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-202
-10
-317
-43
-nr-of-stations
-nr-of-stations
-1
-10
-5.0
-1
 1
 NIL
 HORIZONTAL
@@ -631,12 +616,12 @@ PENS
 "5" 1.0 0 -6459832 true "" ""
 
 SWITCH
-597
-53
-739
-87
-always-top-up?
-always-top-up?
+607
+12
+787
+46
+allow-partial-refueling?
+allow-partial-refueling?
 1
 1
 -1000
