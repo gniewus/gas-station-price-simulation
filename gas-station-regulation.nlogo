@@ -23,7 +23,8 @@ drivers-own [
   price-sensitivity ;; [0-1]
   distance-sensitivity ;; [0-1]
   refuel-countdown ;; [0-10] (10 min) counts down the ticks that pass while refueling at a gas station
-  sleeps-over-night;; tells if the drivers sleeps over night
+  sleeps-over-night ;; tells if the drivers sleeps over night
+  payed-liter-prices ;; list with all payed prices per liter, to learn what's a good price
   ;; Here eventually gasoline consumption per step
 ]
 
@@ -33,6 +34,7 @@ globals [
   gasoline-consumption-per-step
   refueling-duration
   max-distance
+  minute
 ]
 
 to setup
@@ -65,6 +67,7 @@ to setup
     set left-gasoline capacity
     set distance-sensitivity random-float 1
     set price-sensitivity random-float 1
+    set payed-liter-prices []
     setxy random-xcor random-ycor
     set sleeps-over-night random-float 1 < 0.5
     set size 2
@@ -108,8 +111,6 @@ to init-new-day
 
     set customers-per-hour lput 0 customers-per-hour ;; setup the customer counter for the new hour
     set profit-per-hour lput 0 profit-per-hour ;; setup the profit counter for the new hour
-
-
   ]
 end
 
@@ -163,12 +164,15 @@ to move-drivers
     set active-drivers drivers
   ]
 
+  set minute 0
   repeat 60 [
+    set minute minute + 1
     ask active-drivers [
-      ifelse compute-left-gasoline-ratio > drive-to-station-treshold [
-        drive
-      ][
+      ;; drive to gas station, if the driver picked already a station for refueling or if he realizes that he has not much gas left
+      ifelse picked-station != 0 or compute-left-gasoline-ratio < drive-to-station-treshold [
         drive-to-station
+      ][
+        drive
       ]
     ]
   ]
@@ -198,14 +202,19 @@ to refuel
   ifelse refuel-countdown = 0 [
     ;; this is executed, when the driver enters the gas station
     set refuel-countdown refueling-duration
+
+
+
+
     let liter capacity - left-gasoline
-    ask picked-station [
-      account-refueling liter
-    ]
+
+
+    set left-gasoline capacity
+    ask picked-station [account-refueling liter]
+    set payed-liter-prices lput [price] of picked-station payed-liter-prices ;; account the payed price per liter to learn what's a good price
   ][
     if refuel-countdown = 1 [
       ;; this is executed, when refueling is finished (after waiting <refueling-duration> minutes at the gas station)
-      set left-gasoline capacity
       set picked-station 0
       facexy ((random max-pxcor * 2) - max-pxcor) ((random max-pycor * 2) - max-pycor) ; choose a random patch within the map to face
     ]
@@ -455,7 +464,7 @@ nr-of-drivers
 nr-of-drivers
 1
 100
-100.0
+6.0
 1
 1
 NIL
@@ -530,8 +539,8 @@ Time
 Price
 0.5
 2.0
-0.0
 1.0
+1.3
 true
 true
 "" ""
