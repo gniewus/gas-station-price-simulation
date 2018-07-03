@@ -47,6 +47,7 @@ to setup
 
   create-gas-stations nr-of-gas-stations [
     set is-market-leader? false
+    set price-adjustment (random-float 0.10) - 0.05
     set customers-per-hour []
     set price 1 + random 0.5
     set profit-per-hour []
@@ -54,8 +55,8 @@ to setup
     setxy random-xcor random-ycor
     set color get-plot-color
     set size 3
-
   ]
+
   set-as-leader 0
   set-as-leader 1
 
@@ -102,6 +103,7 @@ to init-new-day
     ][
       let mean-price-of-leaders raw-oil-price + mean [price-adjustment] of gas-stations with [is-market-leader?] ;; prediction of mean leader prices
       set price mean-price-of-leaders + price-adjustment
+      if price < raw-oil-price [set price raw-oil-price]
     ]
 
     set customers-per-hour lput 0 customers-per-hour ;; setup the customer counter for the new hour
@@ -140,9 +142,7 @@ to update-prices
       ]
 
       set price price + amount-to-adjust
-      if price <= raw-oil-price [
-        set price raw-oil-price
-      ]
+      if price < raw-oil-price [set price raw-oil-price]
     ]
     set profit-total sum profit-per-hour
     set customers-total sum customers-per-hour
@@ -455,7 +455,7 @@ nr-of-drivers
 nr-of-drivers
 1
 100
-3.0
+100.0
 1
 1
 NIL
