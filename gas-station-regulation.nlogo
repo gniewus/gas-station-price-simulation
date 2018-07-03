@@ -126,8 +126,9 @@ to update-prices
         let price-diff [price] of station - price
         let market-share (item (get-hour - 1) ([customers-per-hour] of station)) / customer-sum
         let normalized-distance (max-distance - distance station) / max-distance
-        set amount-to-adjust price-diff * market-share * normalized-distance
+        set amount-to-adjust amount-to-adjust + (price-diff * market-share * normalized-distance)
       ]
+      set amount-to-adjust amount-to-adjust / (nr-of-gas-stations - 1)
 
       ;; calculate adjustment by own demand
       let own-market-share (item (get-hour - 1) customers-per-hour) / customer-sum
@@ -202,9 +203,6 @@ to refuel
   ifelse refuel-countdown = 0 [
     ;; this is executed, when the driver enters the gas station
     set refuel-countdown refueling-duration
-
-
-
 
     let liter capacity - left-gasoline
     let price-per-liter [price] of picked-station
@@ -296,7 +294,7 @@ to set-as-leader [id]
   ask gas-station id [
     set is-market-leader? true
     set shape  "gas-station-leader"
-    set price-adjustment random-float 0.15
+    set price-adjustment random-float 0.3
     set size 4
   ]
 end
