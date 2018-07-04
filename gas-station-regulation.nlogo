@@ -40,7 +40,6 @@ globals [
   gasoline-consumption-per-step
   refueling-duration
   max-distance
-  minute
 ]
 
 to setup
@@ -211,9 +210,7 @@ to move-drivers
     set active-drivers drivers
   ]
 
-  set minute 0
   repeat 60 [
-    set minute minute + 1
     ask active-drivers [
       ;; drive to gas station, if the driver picked already a station for refueling or if he realizes that he has not much gas left
       ifelse picked-station != 0 or compute-left-gasoline-ratio < drive-to-station-treshold [
