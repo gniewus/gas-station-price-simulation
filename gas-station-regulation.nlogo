@@ -145,7 +145,6 @@ to to-set-color-to-station
 end
 to init-new-day
   set raw-oil-price 1.0 + (random-float 0.3)
-  output-print (word "Day " (get-day + 1) " - raw oil price: " precision raw-oil-price 2 " €")
 
   ask gas-stations [
     ifelse is-market-leader? [
@@ -275,7 +274,6 @@ to refuel
     if allow-partial-refueling? [
       if length payed-liter-prices > 0 and price-per-liter > mean payed-liter-prices [
         let liters-to-leave-empty liter * (mean payed-liter-prices / price-per-liter) * price-sensitivity
-        output-print (word liters-to-leave-empty " = " liter "l (zu tanken) * (" mean payed-liter-prices "/" price-per-liter ") * " price-sensitivity " (price-sensitivity)")
         set liter liter - liters-to-leave-empty
       ]
     ]
@@ -682,10 +680,21 @@ SWITCH
 607
 12
 787
-46
+45
 allow-partial-refueling?
 allow-partial-refueling?
+0
 1
+-1000
+
+SWITCH
+607
+50
+747
+83
+routes-system?
+routes-system?
+0
 1
 -1000
 
