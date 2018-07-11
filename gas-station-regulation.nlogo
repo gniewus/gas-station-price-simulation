@@ -40,6 +40,7 @@ globals [
   gasoline-consumption-per-step
   refueling-duration
   max-distance
+  fixed-positions;;
 ]
 
 to setup
@@ -51,6 +52,7 @@ to setup
 
   set-default-shape gas-stations "gas-station-1"
   set-default-shape drivers "car top"
+  set fixed-positions (list [0 0] (list length-from-center length-from-center) (list length-from-center (- length-from-center)) (list (- length-from-center) (- length-from-center)) (list (- length-from-center) length-from-center) )
 
   create-gas-stations nr-of-gas-stations [
     set is-market-leader? false
@@ -59,10 +61,28 @@ to setup
     set price 1 + random 0.5
     set profit-per-hour []
     set profit-total 0
-    setxy random-xcor random-ycor
     set color get-plot-color
+
+    ifelse fixed-station-positions? [
+      let x-pos item 0 (item who fixed-positions)
+      let y-pos item 1 (item who fixed-positions)
+
+      setxy x-pos y-pos
+    ][
+      setxy random-xcor random-ycor
+    ]
+
     set size 3
+
+
   ]
+
+  set-as-leader 0
+  set-as-leader 1
+  ask gas-stations [
+   show price-adjustment
+  ]
+
 
   ask patches  [
     set  horizontal-road? false
@@ -79,12 +99,6 @@ to setup
 
     ]
   ]
-
-
-
-
-  set-as-leader 0
-  set-as-leader 1
 
   create-drivers nr-of-drivers [
     set on-road true
@@ -122,6 +136,8 @@ to setup
   set raw-oil-price 1
   reset-ticks
 end
+
+
 
 to go
   do-plotting
@@ -407,6 +423,8 @@ to do-plotting
  ;;let stations  list-all-gas-stations
   ;;let av mean stations price
 
+
+
   ;;Ausgabe im Fitness-Plot
   set-current-plot "price/liter"
   set-current-plot-pen "1 L"
@@ -451,6 +469,17 @@ to do-plotting
     plot get-customers-of-station 4
 end
 
+
+to update-histogram
+  set-current-plot "plot 1"
+  clear-plot
+  let pt [profit-total ] of gas-stations
+
+  let n count gas-stations
+  set-plot-x-range 0 n
+  let step 0.05 ; tweak this to leave no gaps
+
+end
 
 to-report get-clock
   report (word "Day " floor (get-day + 1) " - " get-hour-of-the-day ":00" )
@@ -530,7 +559,7 @@ nr-of-drivers
 nr-of-drivers
 1
 100
-50.0
+48.0
 1
 1
 NIL
@@ -578,7 +607,7 @@ drive-to-station-treshold
 drive-to-station-treshold
 10
 50
-30.0
+50.0
 5
 1
 NIL
@@ -694,6 +723,32 @@ routes-system?
 0
 1
 -1000
+
+SWITCH
+604
+252
+812
+285
+fixed-station-positions?
+fixed-station-positions?
+0
+1
+-1000
+
+SLIDER
+604
+212
+776
+245
+length-from-center
+length-from-center
+0
+50
+16.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1082,7 +1137,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.3
+NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
