@@ -19,6 +19,7 @@ gas-stations-own [
 drivers-own [
   capacity ;; [40-80] Maximale kapazität: 40-80 Liter
   left-gasoline ;; [0-capacity] Wie viel noch im tank übrig ist
+  drive-to-station-treshold;;
   picked-station ;; The gas station that the user picked from all of the posibilitis within the kilometer range he can reach
   price-sensitivity ;; [0-1]
   distance-sensitivity ;; [0-1]
@@ -46,7 +47,7 @@ globals [
 to setup
   clear-all
   set nr-of-gas-stations 5
-  set gasoline-consumption-per-step gasoline-consumption
+  set gasoline-consumption-per-step 0.15
   set refueling-duration 10
   set max-distance sqrt ((max-pxcor * max-pxcor) + (max-pycor * max-pycor))
 
@@ -110,6 +111,7 @@ to setup
     setxy random-xcor random-ycor
     set sleeps-over-night random-float 1 < 0.5
     set size 2
+    set drive-to-station-treshold random 50 + 30
 
     if routes-system? [
      let vertical-directions [0 180]
@@ -229,13 +231,13 @@ to move-drivers
   repeat 60 [
     ask active-drivers [
       ;; drive to gas station, if the driver picked already a station for refueling or if he realizes that he has not much gas left
-      ifelse picked-station != 0 or compute-left-gasoline-ratio < drive-to-station-treshold [
+      ifelse picked-station != 0 or compute-left-gasoline-ratio < drive-to-station-treshold  [
         drive-to-station
       ][
-
-        if not on-road and routes-system? [
-          let vertical-directions [0 180]
+        let vertical-directions [0 180]
           let horizontal-directions [90 270]
+        ifelse not on-road and routes-system? [
+
           if [vertical-road?] of patch round xcor round ycor [
             set on-road true
             set heading one-of vertical-directions
@@ -244,6 +246,13 @@ to move-drivers
           if [horizontal-road?] of  patch round xcor round ycor [
             set on-road true
             set heading one-of horizontal-directions
+
+          ]
+
+        ][
+          if horizontal-road? and vertical-road? [
+            set on-road true
+            set heading one-of sentence vertical-directions horizontal-directions
 
           ]
 
@@ -559,7 +568,7 @@ nr-of-drivers
 nr-of-drivers
 1
 100
-48.0
+64.0
 1
 1
 NIL
@@ -598,21 +607,6 @@ get-raw-oil-price
 1
 15
 
-SLIDER
-433
-12
-605
-45
-drive-to-station-treshold
-drive-to-station-treshold
-10
-50
-50.0
-5
-1
-NIL
-HORIZONTAL
-
 PLOT
 926
 230
@@ -631,21 +625,6 @@ true
 PENS
 "raw-oil" 1.0 0 -16777216 true "" ""
 "av-price" 1.0 0 -5298144 true "" ""
-
-SLIDER
-302
-12
-431
-45
-gasoline-consumption
-gasoline-consumption
-0
-1
-0.25
-0.01
-1
-NIL
-HORIZONTAL
 
 MONITOR
 600
@@ -744,7 +723,7 @@ length-from-center
 length-from-center
 0
 50
-16.0
+50.0
 1
 1
 NIL
