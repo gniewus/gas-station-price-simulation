@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE search SYSTEM "behaviorsearch.dtd">
+<search>
+<bsearchVersionNumber>1.10</bsearchVersionNumber>
+<modelInfo>
+<modelFile>/Users/tomasztkaczyk/Desktop/Programming/gas-station-price-simulation/gas-station-regulation.nlogo</modelFile>
+<modelSetupCommands>setup</modelSetupCommands>
+<modelStepCommands>go</modelStepCommands>
+<modelStopCondition/>
+<modelStepLimit>72</modelStepLimit>
+<modelMetricReporter>variance [profit-total] of gas-stations</modelMetricReporter>
+<modelMeasureIf>true</modelMeasureIf>
+</modelInfo>
+<fitnessInfo>
+<fitnessMinimized>true</fitnessMinimized>
+<fitnessCollecting>AT_FINAL_STEP</fitnessCollecting>
+<fitnessSamplingReplications>10</fitnessSamplingReplications>
+<fitnessCombineReplications>MEAN</fitnessCombineReplications>
+</fitnessInfo>
+<searchSpace>
+<paramSpec>["nr-of-drivers" [50 10 100]]</paramSpec>
+<paramSpec>["allow-partial-refueling?" true false]</paramSpec>
+<paramSpec>["routes-system?" true false]</paramSpec>
+<paramSpec>["fixed-station-positions?" true ]</paramSpec>
+<paramSpec>["length-from-center" [3 1 50]]</paramSpec>
+</searchSpace>
+<searchMethod type="StandardGA">
+<searchMethodParameter name="mutation-rate" value="0.03"/>
+<searchMethodParameter name="population-size" value="50"/>
+<searchMethodParameter name="crossover-rate" value="0.7"/>
+<searchMethodParameter name="population-model" value="generational"/>
+<searchMethodParameter name="tournament-size" value="3"/>
+</searchMethod>
+<chromosomeRepresentation type="GrayBinaryChromosome"/>
+<caching>true</caching>
+<evaluationLimit>300</evaluationLimit>
+<bestCheckingNumReplications>0</bestCheckingNumReplications>
+</search>
