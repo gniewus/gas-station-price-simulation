@@ -14,6 +14,7 @@ gas-stations-own [
   profit-per-hour ;; price - raw-oil-price -> sum of all sales made by this gas station per hour
   profit-total ;;  sum of all sales made by this gas station
   customers-total;;
+  borderline;; theshold for the price, calculated: random percentile of gas price  + gas price
 ]
 
 drivers-own [
@@ -63,7 +64,7 @@ to setup
     set profit-per-hour []
     set profit-total 0
     set color get-plot-color
-
+    set borderline random 5
     ifelse fixed-station-positions? [
       let x-pos item 0 (item who fixed-positions)
       let y-pos item 1 (item who fixed-positions)
@@ -135,7 +136,7 @@ to setup
 
   ]
 
-  set raw-oil-price 1
+  set raw-oil-price 1 + (random-float 0.3)
   reset-ticks
 end
 
@@ -161,7 +162,9 @@ to to-set-color-to-station
   ;; here comes the function to set the same colors as in the plot
 end
 to init-new-day
-  set raw-oil-price 1.0 + (random-float 0.3)
+  if not fix-raw-oil-price [
+    set raw-oil-price 1.0 + (random-float 0.3)
+  ]
 
   ask gas-stations [
     ifelse is-market-leader? [
@@ -178,7 +181,9 @@ to init-new-day
 end
 
 to update-prices
+  let night member? get-hour-of-the-day [0 1 2 3 4]
   let customer-sum (customers-of-all-gas-stations (get-hour - 1))
+
 
   ask gas-stations [
     if customer-sum > 0 [
@@ -205,9 +210,12 @@ to update-prices
         ]
         set amount-to-adjust amount-to-adjust + additional-amount-to-adjust
       ]
-
+      if night [set amount-to-adjust amount-to-adjust / 2]
       set price price + amount-to-adjust
-      if price < raw-oil-price [set price raw-oil-price]
+
+      let factor (raw-oil-price / 100) * borderline
+      if price < raw-oil-price + factor
+      [set price raw-oil-price + factor]
     ]
     set profit-total sum profit-per-hour
     set customers-total sum customers-per-hour
@@ -568,7 +576,7 @@ nr-of-drivers
 nr-of-drivers
 1
 100
-64.0
+57.0
 1
 1
 NIL
@@ -723,11 +731,22 @@ length-from-center
 length-from-center
 0
 50
-50.0
+32.0
 1
 1
 NIL
 HORIZONTAL
+
+SWITCH
+312
+10
+474
+43
+fix-raw-oil-price
+fix-raw-oil-price
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
