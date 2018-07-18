@@ -28,6 +28,8 @@ drivers-own [
   sleeps-over-night ;; tells if the drivers sleeps over night
   payed-liter-prices ;; list with all payed prices per liter, to learn what's a good price
   on-road;; Sets if the driver is going back to the road where he can continue the journey
+  money-spent;;
+  refueled-gas;;
   ;; Here eventually gasoline consumption per step
 ]
 patches-own [
@@ -181,7 +183,7 @@ to init-new-day
 end
 
 to update-prices
-  let night member? get-hour-of-the-day [0 1 2 3 4]
+  let night member? get-hour-of-the-day [23 0 1 2 3 4 5 6]
   let customer-sum (customers-of-all-gas-stations (get-hour - 1))
 
 
@@ -308,6 +310,9 @@ to refuel
       ]
     ]
 
+    set refueled-gas refueled-gas + liter
+    set money-spent money-spent + (price-per-liter * liter)
+
     set left-gasoline capacity
     ask picked-station [account-refueling liter]
     set payed-liter-prices lput price-per-liter payed-liter-prices ;; account the payed price per liter to learn what's a good price
@@ -316,6 +321,9 @@ to refuel
       ;; this is executed, when refueling is finished (after waiting <refueling-duration> minutes at the gas station)
       set picked-station 0
       facexy ((random max-pxcor * 2) - max-pxcor) ((random max-pycor * 2) - max-pycor) ; choose a random patch within the map to face
+
+
+
     ]
   ]
   set refuel-countdown refuel-countdown - 1
@@ -443,7 +451,7 @@ to do-plotting
 
 
   ;;Ausgabe im Fitness-Plot
-  set-current-plot "price/liter"
+  set-current-plot "price-per-liter"
   set-current-plot-pen "1 L"
     plot plot-price-of-station 0
   set-current-plot-pen "2 L"
@@ -496,6 +504,17 @@ to update-histogram
   set-plot-x-range 0 n
   let step 0.05 ; tweak this to leave no gaps
 
+end
+to-report drivers-payed-per-liter
+  let arr []
+  ask drivers[
+    if refueled-gas = 0[
+      set refueled-gas 1
+    ]
+    set arr lput (money-spent / refueled-gas) arr
+  ]
+
+  report arr
 end
 
 to-report get-clock
@@ -576,7 +595,7 @@ nr-of-drivers
 nr-of-drivers
 1
 100
-57.0
+64.0
 1
 1
 NIL
@@ -587,7 +606,7 @@ PLOT
 10
 1330
 222
-Price/Liter
+Price-per-Liter
 Time
 Price
 1.0
@@ -633,6 +652,7 @@ true
 PENS
 "raw-oil" 1.0 0 -16777216 true "" ""
 "av-price" 1.0 0 -5298144 true "" ""
+"avg-cost" 1.0 0 -13840069 true "" "plot mean drivers-payed-per-liter"
 
 MONITOR
 600
@@ -744,7 +764,7 @@ SWITCH
 43
 fix-raw-oil-price
 fix-raw-oil-price
-0
+1
 1
 -1000
 
