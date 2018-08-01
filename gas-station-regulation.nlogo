@@ -60,7 +60,8 @@ to setup
 
   create-gas-stations nr-of-gas-stations [
     set is-market-leader? false
-    set price-adjustment (random-float 0.10) - 0.05
+    let spread 0.30
+    set price-adjustment (random-float spread) - spread / 2
     set customers-per-hour []
     set price 1 + random 0.5
     set profit-per-hour []
