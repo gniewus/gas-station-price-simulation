@@ -314,7 +314,7 @@ to refuel
     set refueled-gas refueled-gas + liter
     set money-spent money-spent + (price-per-liter * liter)
 
-    set left-gasoline capacity
+    set left-gasoline left-gasoline + liter
     ask picked-station [account-refueling liter]
     set payed-liter-prices lput price-per-liter payed-liter-prices ;; account the payed price per liter to learn what's a good price
   ][
@@ -1156,7 +1156,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.2
+NetLogo 6.0.3
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
